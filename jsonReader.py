@@ -7,26 +7,99 @@ response = requests.get(
 data = response.text
 parsed_json = json.loads(data)
 
+title = parsed_json['items'][0]['title'][0]['title']
+sherpa_ID = parsed_json['items'][0]['id']
+locations = ["any_website", "insitutional_repository", "named_repository"]
+
+published_allowed = False
+published_conditions = []
+published_embargo = []
+published_license = []
+
+accepted_allowed = False
+accepted_conditions = []
+accepted_embargo = []
+accepted_license = []
+
+submitted_allowed = False
+submitted_conditions = []
+submitted_embargo = []
+submitted_license = []
+
 publisher_policy = parsed_json['items'][0]['publisher_policy']
 # need to break down the publisher_policy into its components
 # important to look at: conditions, embargo, id, location, additional_oa_fee
-publisher_policy_ids = []
-# iterates through publisher policy and adds the ids to a list
+
+# publisher_policy_ids = []
+# # iterates through publisher policy and adds the ids to a list
+# for row in publisher_policy:
+#     publisher_policy_ids.append(row['id'])
+
+# article_url = parsed_json['items'][0]['url']
+# issns = parsed_json['items'][0]['issns']
+
+# permitted_oa = []
+# print(row['permitted_oa'][0]['article_version'][0])
+# print(row['permitted_oa'][0]['location']['location'])
+# print(row['permitted_oa'][0]['additional_oa_fee'])
+
+
 for row in publisher_policy:
-    publisher_policy_ids.append(row['id'])
+    # checks for a fee, if we are under the location and article version is submitted
+    for path in row['permitted_oa']:
+        # print(path['article_version'][0])
+        # print(path['location']['location'])
+        # print(path['additional_oa_fee'])
+        # if ('any_website' or 'insitutional_repository' or 'named_repository') in path['location']['location']:
+        #     print('yes')
+        #     print(path['location']['location'])
+        if path["additional_oa_fee"] == "no" and any(ele in locations for ele in path['location']['location']) and path['article_version'][0] == 'submitted':
+            submitted_allowed = True
+            submitted_conditions.append(path['conditions'])
+            if 'embargo' in path:
+                submitted_embargo.append(path['embargo'])
+            else:
+                submitted_embargo.append('no embargo')
+            if 'license' in path:
+                submitted_license.append(path['license'][0]['license'])
+            else:
+                submitted_license.append('no license available')
+    # repeat for each article version
+        if path["additional_oa_fee"] == "no" and any(ele in locations for ele in path['location']['location']) and path['article_version'][0] == 'accepted':
+            accepted_allowed = True
+            accepted_conditions.append(path['conditions'])
+            if 'embargo' in path:
+                accepted_embargo.append(path['embargo'])
+            else:
+                accepted_embargo.append('no embargo')
+            if 'license' in path:
+                accepted_license.append(path['license'][0]['license'])
+            else:
+                accepted_license.append('no license available')
+        if path["additional_oa_fee"] == "no" and any(ele in locations for ele in path['location']['location']) and path['article_version'][0] == 'published':
+            published_allowed = True
+            published_conditions.append(path['conditions'])
+            if 'embargo' in path:
+                published_embargo.append(path['embargo'])
+            else:
+                published_embargo.append('no embargo')
+            if 'license' in path:
+                published_license.append(path['license'][0]['license'])
+            else:
+                published_license.append('no license available')
+    # repeat for each article version
 
-publishers = parsed_json['items'][0]['publishers']
-article_url = parsed_json['items'][0]['url']
-issns = parsed_json['items'][0]['issns']
-publication_id = parsed_json['items'][0]['id']
-permitted_oa = []
+print(submitted_allowed)
+print(submitted_conditions)
+print(submitted_embargo)
+print(submitted_license)
 
-for row in publisher_policy:
-    if row['permitted_oa'][0]["additional_oa_fee"] == "no" and 'any_website' in row['permitted_oa'][0]['location']['location']:
-        # might need to iterate through the permitted_oa list too
-        permitted_oa.append(row['permitted_oa'][0])
+print(accepted_allowed)
+print(accepted_conditions)
+print(accepted_embargo)
+print(accepted_license)
 
-# need to ask if we are looking at location or article version so that i know which permitted oa(s) we need
-# maybe make separate lists for each type of article version
-
-print(permitted_oa)
+print(published_allowed)
+print(published_conditions)
+print(published_embargo)
+print(published_license)

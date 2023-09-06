@@ -1,0 +1,30 @@
+Questions we need to answer.
+1. Can TTU put up the publishers copy?
+2. ... accepted copy?
+3. ... submitted copy?
+4. What restrictions for each type?
+
+Important notes:
+*If there is a fee, then we can NOT put it up
+*There should be a notes field for embargo, license, other possibly important Information
+*We fall under any website, non-commercial repository and institutional repository
+*If conditions are not met, publishable should say no copies allowed
+
+
+
+Information we need in database:
+1. Journal title X
+2. Published Version allowed
+2a. Published Version conditions
+2b. Published Version embargo
+2c. Published Version license
+3. Accepted Version allowed
+3a. Accepted Version conditions
+3b. Accepted Version embargo
+3c. Accepted Version license
+4. Submitted Version allowed
+4a. Submitted Version conditions
+4b. Submitted Version embargo
+4c. Submitted Version license
+5. Sherpa-Romeo id X
+6. ISBN??
