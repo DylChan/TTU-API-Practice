@@ -1,5 +1,10 @@
 import json
 import requests
+import mysql.connector
+# needs to read list of CSV titles and then get the following info from each JSON
+# will temporarily make this the program that adds to database, will move to DatabasePopulater.py later
+
+
 # Read JSON file
 response = requests.get(
     'https://v2.sherpa.ac.uk/cgi/retrieve?item-type=publication&format=Json&limit=1&offset=0&filter=%5B%5B%22title%22%2C%22equals%22%2C%22Applied%20Surface%20Science%22%5D%5D&api-key=4FB4B054-3ACC-11EE-AB97-40C413E8924B')
@@ -89,17 +94,41 @@ for row in publisher_policy:
                 published_license.append('no license available')
     # repeat for each article version
 
-print(submitted_allowed)
-print(submitted_conditions)
-print(submitted_embargo)
-print(submitted_license)
+# print(submitted_allowed)
+# print(submitted_conditions)
+# print(submitted_embargo)
+# print(submitted_license)
 
-print(accepted_allowed)
-print(accepted_conditions)
-print(accepted_embargo)
-print(accepted_license)
+# print(accepted_allowed)
+# print(accepted_conditions)
+# print(accepted_embargo)
+# print(accepted_license)
 
-print(published_allowed)
-print(published_conditions)
-print(published_embargo)
-print(published_license)
+# print(published_allowed)
+# print(published_conditions)
+# print(published_embargo)
+# print(published_license)
+# instead of printing, need to save to database
+
+db = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    passwd="Monty1010",
+    database="journal_publishing_policy"
+)
+
+mycursor = db.cursor()
+
+insert_stmt = ("INSERT INTO TITLE, SUBMITTED_ALLOWED, SUBMITTED_CONDITIONS, SUBMITTED_EMBARGO, SUBMITTED_LICENSE, ACCEPTED_ALLOWED, ACCEPTED_CONDITIONS, ACCEPTED_EMBARGO, ACCEPTED_LICENSE, PUBLISHED_ALLOWED, PUBLISHED_CONDITIONS, PUBLISHED_EMBARGO, PUBLISHED_LICENSE, SHERPA_ID, PUBLISHER_POLICY) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s,%s,%s)")
+
+data = [(title, submitted_allowed, submitted_conditions, submitted_embargo, submitted_license, accepted_allowed, accepted_conditions,
+         accepted_embargo, accepted_license, published_allowed, published_conditions, published_embargo, published_license, sherpa_ID, publisher_policy)]
+
+try:
+    mycursor.execute(insert_stmt, data)
+    db.commit()
+except:
+    db.rollback()
+
+print("Data inserted")
+db.close()
