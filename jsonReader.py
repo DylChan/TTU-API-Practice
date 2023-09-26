@@ -12,24 +12,24 @@ response = requests.get(
 data = response.text
 parsed_json = json.loads(data)
 
-title = parsed_json['items'][0]['title'][0]['title']
-sherpa_ID = parsed_json['items'][0]['id']
+title = str(parsed_json['items'][0]['title'][0]['title'])
+sherpa_ID = str(parsed_json['items'][0]['id'])
 locations = ["any_website", "insitutional_repository", "named_repository"]
 
-published_allowed = False
-published_conditions = []
-published_embargo = []
-published_license = []
+published_allowed = 0
+published_conditions = 'NA'
+published_embargo = 'NA'
+published_license = 'NA'
 
-accepted_allowed = False
-accepted_conditions = []
-accepted_embargo = []
-accepted_license = []
+accepted_allowed = 0
+accepted_conditions = 'NA'
+accepted_embargo = 'NA'
+accepted_license = 'NA'
 
-submitted_allowed = False
-submitted_conditions = []
-submitted_embargo = []
-submitted_license = []
+submitted_allowed = 0
+submitted_conditions = 'NA'
+submitted_embargo = 'NA'
+submitted_license = 'NA'
 
 publisher_policy = parsed_json['items'][0]['publisher_policy']
 # need to break down the publisher_policy into its components
@@ -59,45 +59,54 @@ for row in publisher_policy:
         #     print('yes')
         #     print(path['location']['location'])
         if path["additional_oa_fee"] == "no" and any(ele in locations for ele in path['location']['location']) and path['article_version'][0] == 'submitted':
-            submitted_allowed = True
-            submitted_conditions.append(path['conditions'])
+            submitted_allowed = 1
+            # submitted_conditions.append(path['conditions'])
+            submitted_conditions = str(path['conditions'])
             if 'embargo' in path:
-                submitted_embargo.append(path['embargo'])
+                submitted_embargo = str(path['embargo'])
             else:
-                submitted_embargo.append('no embargo')
+                submitted_embargo = ('no embargo')
             if 'license' in path:
-                submitted_license.append(path['license'][0]['license'])
+                submitted_license = str(path['license'][0]['license'])
             else:
-                submitted_license.append('no license available')
+                submitted_license = ('no license available')
     # repeat for each article version
         if path["additional_oa_fee"] == "no" and any(ele in locations for ele in path['location']['location']) and path['article_version'][0] == 'accepted':
-            accepted_allowed = True
-            accepted_conditions.append(path['conditions'])
+            accepted_allowed = 1
+            accepted_conditions = str(path['conditions'])
             if 'embargo' in path:
-                accepted_embargo.append(path['embargo'])
+                accepted_embargo = str(path['embargo'])
             else:
-                accepted_embargo.append('no embargo')
+                accepted_embargo = ('no embargo')
             if 'license' in path:
-                accepted_license.append(path['license'][0]['license'])
+                accepted_license = str(path['license'][0]['license'])
             else:
-                accepted_license.append('no license available')
+                accepted_license = ('no license available')
         if path["additional_oa_fee"] == "no" and any(ele in locations for ele in path['location']['location']) and path['article_version'][0] == 'published':
-            published_allowed = True
-            published_conditions.append(path['conditions'])
+            published_allowed = 1
+            published_conditions = str(path['conditions'])
             if 'embargo' in path:
-                published_embargo.append(path['embargo'])
+                published_embargo = str(path['embargo'])
             else:
-                published_embargo.append('no embargo')
+                published_embargo = ('no embargo')
             if 'license' in path:
-                published_license.append(path['license'][0]['license'])
+                published_license = str(path['license'][0]['license'])
             else:
-                published_license.append('no license available')
+                published_license = ('no license available')
     # repeat for each article version
+# print(title)
+# print(type(title))
+# print(sherpa_ID)
+# print(type(sherpa_ID))
 
 # print(submitted_allowed)
+# print(type(submitted_allowed))
 # print(submitted_conditions)
+# print(type(submitted_conditions))
 # print(submitted_embargo)
+# print(type(submitted_embargo))
 # print(submitted_license)
+# print(type(submitted_license))
 
 # print(accepted_allowed)
 # print(accepted_conditions)
@@ -110,25 +119,28 @@ for row in publisher_policy:
 # print(published_license)
 # instead of printing, need to save to database
 
-db = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    passwd="Monty1010",
-    database="journal_publishing_policy"
-)
-
-mycursor = db.cursor()
-
-insert_stmt = ("INSERT INTO TITLE, SUBMITTED_ALLOWED, SUBMITTED_CONDITIONS, SUBMITTED_EMBARGO, SUBMITTED_LICENSE, ACCEPTED_ALLOWED, ACCEPTED_CONDITIONS, ACCEPTED_EMBARGO, ACCEPTED_LICENSE, PUBLISHED_ALLOWED, PUBLISHED_CONDITIONS, PUBLISHED_EMBARGO, PUBLISHED_LICENSE, SHERPA_ID, PUBLISHER_POLICY) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s,%s,%s)")
-
-data = [(title, submitted_allowed, submitted_conditions, submitted_embargo, submitted_license, accepted_allowed, accepted_conditions,
-         accepted_embargo, accepted_license, published_allowed, published_conditions, published_embargo, published_license, sherpa_ID, publisher_policy)]
 
 try:
+    db = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        passwd="Monty1010",
+        database="journal_publishing_policy"
+    )
+
+    mycursor = db.cursor()
+
+    insert_stmt = """INSERT INTO items(title, submitted_allowed, submitted_conditions, submitted_embargo, submitted_license, accepted_allowed, accepted_conditions, accepted_embargo, accepted_license, published_allowed, published_conditions, published_embargo, published_license, sherpa_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s,%s,%s)"""
+
+    data = (title, submitted_allowed, submitted_conditions, submitted_embargo, submitted_license, accepted_allowed, accepted_conditions,
+            accepted_embargo, accepted_license, published_allowed, published_conditions, published_embargo, published_license, sherpa_ID)
+
     mycursor.execute(insert_stmt, data)
     db.commit()
-except:
-    db.rollback()
-
-print("Data inserted")
-db.close()
+    print("Data inserted")
+except mysql.connector.Error as error:
+    print("Failed to insert into MySQL table {}".format(error))
+finally:
+    if db.is_connected():
+        db.close()
+        print("MySQL connection is closed")
