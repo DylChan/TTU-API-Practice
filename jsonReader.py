@@ -18,16 +18,11 @@ for value in firstThirty:
     requestURL = ('https://v2.sherpa.ac.uk/cgi/retrieve?item-type=publication&format=Json&limit=1&offset=0&filter=%5B%5B%22title%22%2C%22equals%22%2C%22' +
                   requestTitle + '%22%5D%5D&api-key=4FB4B054-3ACC-11EE-AB97-40C413E8924B')
 # Read JSON file
-# response = requests.get(
-#     'https://v2.sherpa.ac.uk/cgi/retrieve?item-type=publication&format=Json&limit=1&offset=0&filter=%5B%5B%22title%22%2C%22equals%22%2C%22Applied%20Surface%20Science%22%5D%5D&api-key=4FB4B054-3ACC-11EE-AB97-40C413E8924B')
     response = requests.get(requestURL)
-    # print(response.status_code)
     # Convert JSON to Python Object
-    # try:
     data = response.text
     parsed_json = json.loads(data)
-    # except ValueError:
-    #     print('No JSON returned.')
+
     if parsed_json['items'] == []:
         title = unformattedTitle
         sherpaID = '0'
@@ -68,31 +63,11 @@ for value in firstThirty:
         submitted_license = 'NA'
 
         publisher_policy = parsed_json['items'][0]['publisher_policy']
-        # need to break down the publisher_policy into its components
-        # important to look at: conditions, embargo, id, location, additional_oa_fee
-
-        # publisher_policy_ids = []
-        # # iterates through publisher policy and adds the ids to a list
-        # for row in publisher_policy:
-        #     publisher_policy_ids.append(row['id'])
-
-        # article_url = parsed_json['items'][0]['url']
-        # issns = parsed_json['items'][0]['issns']
-
-        # permitted_oa = []
-        # print(row['permitted_oa'][0]['article_version'][0])
-        # print(row['permitted_oa'][0]['location']['location'])
-        # print(row['permitted_oa'][0]['additional_oa_fee'])
 
         for row in publisher_policy:
             # checks for a fee, if we are under the location and article version is submitted
             for path in row['permitted_oa']:
-                # print(path['article_version'][0])
-                # print(path['location']['location'])
-                # print(path['additional_oa_fee'])
-                # if ('any_website' or 'insitutional_repository' or 'named_repository') in path['location']['location']:
-                #     print('yes')
-                #     print(path['location']['location'])
+
                 if 'additional_oa_fee' in path:
                     if path["additional_oa_fee"] == "no" and any(ele in locations for ele in path['location']['location']) and path['article_version'][0] == 'submitted':
                         submitted_allowed = 1
@@ -138,30 +113,6 @@ for value in firstThirty:
                         else:
                             published_license = ('no license available')
             # repeat for each article version
-        # print(title)
-        # print(type(title))
-        # print(sherpa_ID)
-        # print(type(sherpa_ID))
-
-        # print(submitted_allowed)
-        # print(type(submitted_allowed))
-        # print(submitted_conditions)
-        # print(type(submitted_conditions))
-        # print(submitted_embargo)
-        # print(type(submitted_embargo))
-        # print(submitted_license)
-        # print(type(submitted_license))
-
-        # print(accepted_allowed)
-        # print(accepted_conditions)
-        # print(accepted_embargo)
-        # print(accepted_license)
-
-        # print(published_allowed)
-        # print(published_conditions)
-        # print(published_embargo)
-        # print(published_license)
-        # instead of printing, need to save to database
 
     try:
         db = mysql.connector.connect(
